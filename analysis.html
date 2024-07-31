@@ -69,11 +69,35 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>q: what types of stocks have the most hidden orders? specific q: do stocks</p>
-<p>outcome: covariates: units:</p>
-<p>validity:</p>
-<p>pop table: time: source: units:</p>
-<p>stability: representativeness: unconfoundedness:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: gaussian 
+  Links: mu = identity; sigma = identity 
+Formula: hidden ~ volatility_rank 
+   Data: security1 (Number of observations: 10000) 
+  Draws: 4 chains, each with iter = 2000; warmup = 1000; thin = 1;
+         total post-warmup draws = 4000
+
+Regression Coefficients:
+                   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+Intercept           1321.87     77.58  1167.49  1475.58 1.00     3092     2412
+volatility_ranklow  -473.17     88.56  -651.60  -298.23 1.00     3238     2748
+volatility_rankmid   225.04    107.94    11.64   433.81 1.00     3108     2872
+
+Further Distributional Parameters:
+      Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sigma  3403.24     23.76  3356.93  3450.85 1.00     3852     3162
+
+Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+and Tail_ESS are effective sample size measures, and Rhat is the potential
+scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
+</div>
+</div>
+<p>q: what types of stocks experience the most hidden orders? specific q: in the US stock market, will highly volatile stocks experience larger amounts of hidden orders than moderately or less volatile stocks?</p>
+<p>preceptor table: type of question: predictive – # of hidden orders is one outcome outcome: number of hidden orders (Hidden) covariates: volatility ranking (1-10), security type, could do another one with market cap rank units: individual US securities family: gaussian time: near future –&gt; 2024-2050</p>
+<p>validity: - volatility columns are not the same between the preceptor table and the data: the sec and individual investors might have different methods to determine what makes a stock volatile, making measurements different</p>
+<p>pop table: time: 2010 - 2050 source: different stock indexes, government organizations units: individual securities outcomes and covariates are the same</p>
+<p>stability: - trends in investing and sec regulations, as well as their rating system, change over time representativeness: - data only covers publicly traded securities, correlations between volatility and hidden orders could be different with privately traded securities unconfoundedness: - this is predictive</p>
 
 </main>
 <!-- /main column -->

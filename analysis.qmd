@@ -19,7 +19,29 @@ library(gtsummary)
 #| label: data_load
 #| message: false
 
-stocks <- read_csv("q1_2024_all.csv")
+security <- read_csv("q1_2024_all.csv") |> 
+  janitor::clean_names() |>
+   mutate(volatility_rank = 
+            case_when(volatility_rank %in% c(1,4) ~ "low",
+    volatility_rank %in% c(5,7) ~ "mid" ,
+    volatility_rank %in% c(8,10) ~ "high"))|>
+  select(security, ticker, volatility_rank, hidden) |>
+  drop_na()
+
+security1 <- security %>% sample_n(10000)
+```
+
+
+```{r}
+#| label: model
+#| cache: true
+
+brm(formula = hidden ~ volatility_rank,
+    data = security1,
+    family = gaussian(),
+    silent = 2,
+    refresh = 0,
+    seed = 9)
 ```
 
 q: what types of stocks experience the most hidden orders?
@@ -28,7 +50,7 @@ specific q: in the US stock market, will highly volatile stocks experience large
 preceptor table:
 type of question: predictive -- # of hidden orders is one outcome
 outcome: number of hidden orders (Hidden)
-covariates: volatility ranking (1-10), security type (maybe), could do another one with market cap rank
+covariates: volatility ranking (1-10), security type, could do another one with market cap rank
 units: individual US securities
 family: gaussian
 time: near future --> 2024-2050
@@ -47,4 +69,4 @@ stability:
 representativeness:
 - data only covers publicly traded securities, correlations between volatility and hidden orders could be different with privately traded securities
 unconfoundedness:
-- this is predictive so lol
+- this is predictive
