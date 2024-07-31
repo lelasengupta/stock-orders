@@ -6,3 +6,45 @@ execute:
   echo: false
 ---
 
+```{r}
+#| label: setup
+#| message: false
+library(tidyverse)
+library(brms)
+library(tidybayes)
+library(gtsummary)
+```
+
+```{r}
+#| label: data_load
+#| message: false
+
+stocks <- read_csv("q1_2024_all.csv")
+```
+
+q: what types of stocks experience the most hidden orders?
+specific q: in the US stock market, will highly volatile stocks experience larger amounts of hidden orders than moderately or less volatile stocks?
+
+preceptor table:
+type of question: predictive -- # of hidden orders is one outcome
+outcome: number of hidden orders (Hidden)
+covariates: volatility ranking (1-10), security type (maybe), could do another one with market cap rank
+units: individual US securities
+family: gaussian
+time: near future --> 2024-2050
+
+validity: 
+- volatility columns are not the same between the preceptor table and the data: the sec and individual investors might have different methods to determine what makes a stock volatile, making measurements different
+
+pop table:
+time: 2010 - 2050
+source: different stock indexes, government organizations
+units: individual securities
+outcomes and covariates are the same
+
+stability:
+- trends in investing and sec regulations, as well as their rating system, change over time
+representativeness:
+- data only covers publicly traded securities, correlations between volatility and hidden orders could be different with privately traded securities
+unconfoundedness:
+- this is predictive so lol
