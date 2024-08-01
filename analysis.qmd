@@ -19,16 +19,17 @@ library(gtsummary)
 #| label: data_load
 #| message: false
 
-security <- read_csv("q1_2024_all.csv") |> 
+x <- read_csv("q1_2024_all.csv") |> 
   janitor::clean_names() |>
    mutate(volatility_rank = 
             case_when(volatility_rank %in% c(1,4) ~ "low",
     volatility_rank %in% c(5,7) ~ "mid" ,
     volatility_rank %in% c(8,10) ~ "high"))|>
-  select(security, ticker, volatility_rank, hidden) |>
-  drop_na()
+  select(security, ticker, volatility_rank, hidden, date) |>
+  filter(hidden > 0) |>
+  drop_na() 
 
-security1 <- security %>% sample_n(10000)
+security <- x %>% sample_n(100000)
 ```
 
 
@@ -36,8 +37,8 @@ security1 <- security %>% sample_n(10000)
 #| label: model
 #| cache: true
 
-brm(formula = hidden ~ volatility_rank,
-    data = security1,
+fit_sec2 <- brm(formula = hidden ~ volatility_rank + security,
+    data = security,
     family = gaussian(),
     silent = 2,
     refresh = 0,
@@ -50,7 +51,7 @@ specific q: in the US stock market, will highly volatile stocks experience large
 preceptor table:
 type of question: predictive -- # of hidden orders is one outcome
 outcome: number of hidden orders (Hidden)
-covariates: volatility ranking (1-10), security type, could do another one with market cap rank
+covariates: volatility ranking (1-10), date, security type, could do another one with market cap rank
 units: individual US securities
 family: gaussian
 time: near future --> 2024-2050
@@ -70,3 +71,5 @@ representativeness:
 - data only covers publicly traded securities, correlations between volatility and hidden orders could be different with privately traded securities
 unconfoundedness:
 - this is predictive
+
+model: randomly selected 10,000 equities out of 400,000 
