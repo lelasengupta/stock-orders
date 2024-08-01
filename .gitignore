@@ -6,3 +6,8 @@
 *_files
 .DS_Store
 *_cache
+_site/
+_publish.yml
+site_libs/
+
+/.quarto/
