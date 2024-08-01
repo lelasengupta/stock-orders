@@ -2,13 +2,14 @@ project:
   type: website
 
 website:
-  title: "Hidden Orders"
+  title: "Hidden Security Orders"
   navbar: 
     left:
-      - href: analysis.qmd
+      - href: index.qmd
         text: Home
       - about.qmd
-      - index.qmd
+      - analysis.qmd
+      - sources.qmd
 
 format:
   html:

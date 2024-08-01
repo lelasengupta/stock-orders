@@ -1,4 +1,94 @@
 ---
-title: "Extra Graphs"
+title: "Stock Orders"
+author: "Lela Sengupta"
+format: html
+execute: 
+  echo: false
 ---
-here
+
+```{r}
+#| label: setup
+#| message: false
+library(tidyverse)
+library(brms)
+library(tidybayes)
+library(gtsummary)
+```
+
+```{r}
+#| label: data_load
+#| message: false
+
+#filter out efts
+
+x <- read_csv("q1_2024_all.csv") |> 
+  janitor::clean_names() |>
+   mutate(volatility_rank = 
+            case_when(volatility_rank %in% c(1,4) ~ "low",
+    volatility_rank %in% c(5,7) ~ "mid" ,
+    volatility_rank %in% c(8,10) ~ "high"))|>
+  select(security, ticker, volatility_rank, hidden, date) |>
+  filter(hidden > 0) |>
+  drop_na() 
+
+Q1 <- quantile(x$hidden, 0.25, na.rm = TRUE)
+Q3 <- quantile(x$hidden, 0.75, na.rm = TRUE)
+IQR <- Q3 - Q1
+lower <- Q1 - 3 * IQR
+upper <- Q3 + 3 * IQR
+
+x1 <- x |>
+  filter(hidden >= lower, hidden <= upper)
+
+security <- x1 %>% sample_n(100000)
+```
+
+
+```{r}
+#| label: model
+#| cache: true
+
+fit_sec3 <- brm(formula = hidden ~ volatility_rank,
+    data = security,
+    family = gaussian(),
+    silent = 2,
+    refresh = 0,
+    seed = 9)
+```
+
+
+```{r}
+tbl_regression(fit_sec3)
+```
+
+q: what types of stocks experience the most hidden orders?
+specific q: in the US stock market, will highly volatile stocks experience larger amounts of hidden orders than moderately or less volatile stocks?
+
+preceptor table:
+type of question: predictive -- # of hidden orders is one outcome
+outcome: number of hidden orders (Hidden)
+covariates: volatility ranking (1-10), date, security type, could do another one with market cap rank
+units: individual US securities
+family: gaussian
+time: near future --> 2024-2050
+
+validity: 
+- volatility columns are not the same between the preceptor table and the data: the sec and individual investors might have different methods to determine what makes a stock volatile, making measurements different
+
+pop table:
+time: 2010 - 2050
+source: different stock indexes, government organizations
+units: individual securities
+outcomes and covariates are the same
+
+stability:
+- trends in investing and sec regulations, as well as their rating system, change over time
+representativeness:
+- data only covers publicly traded securities, correlations between volatility and hidden orders could be different with privately traded securities
+unconfoundedness:
+- this is predictive
+
+model: 
+- 1: just volatility and hidden orders
+- 2: volatility, hidden orders, and stocks
+- 3: volatility, hidden orders, and stocks (within 3 * IQR)

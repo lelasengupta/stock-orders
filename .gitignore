@@ -8,6 +8,5 @@
 *_cache
 _site/
 _publish.yml
-site_libs/
 
 /.quarto/

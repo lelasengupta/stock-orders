@@ -3,3 +3,5 @@ title: "Sources"
 ---
 
 Data from the United States Securities and Exchange Commission (SEC) insert link here
+
+cleaned the data by renaming items in rows, filtering out outliers, separating stocks and etfs
