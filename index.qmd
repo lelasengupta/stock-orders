@@ -19,28 +19,17 @@ library(gtsummary)
 #| label: data_load
 #| message: false
 
-#filter out efts
-
-x <- read_csv("q1_2024_all.csv") |> 
+security <- read_csv("q1_2024_all.csv") |> 
   janitor::clean_names() |>
    mutate(volatility_rank = 
             case_when(volatility_rank %in% c(1,4) ~ "low",
     volatility_rank %in% c(5,7) ~ "mid" ,
     volatility_rank %in% c(8,10) ~ "high"))|>
   select(security, ticker, volatility_rank, hidden, date) |>
-  filter(hidden > 0) |>
+  filter(hidden > 0, date == 20240207, security == "Stock") |>
   drop_na() 
 
-Q1 <- quantile(x$hidden, 0.25, na.rm = TRUE)
-Q3 <- quantile(x$hidden, 0.75, na.rm = TRUE)
-IQR <- Q3 - Q1
-lower <- Q1 - 3 * IQR
-upper <- Q3 + 3 * IQR
 
-x1 <- x |>
-  filter(hidden >= lower, hidden <= upper)
-
-security <- x1 %>% sample_n(100000)
 ```
 
 
@@ -48,7 +37,7 @@ security <- x1 %>% sample_n(100000)
 #| label: model
 #| cache: true
 
-fit_sec3 <- brm(formula = hidden ~ volatility_rank,
+fit_sec5 <- brm(formula = hidden ~ volatility_rank,
     data = security,
     family = gaussian(),
     silent = 2,
@@ -58,11 +47,23 @@ fit_sec3 <- brm(formula = hidden ~ volatility_rank,
 
 
 ```{r}
-tbl_regression(fit_sec3)
+#| label: plot
+fit_sec5 |> 
+  add_epred_draws(newdata = tibble(volatility_rank = c("low", "mid", "high"))) |> 
+  ggplot(aes(x = .epred, fill = volatility_rank)) + 
+    geom_histogram(aes(y = after_stat(count/sum(count))),
+                   bins = 100, alpha = 0.7) + 
+    scale_y_continuous(labels = scales::percent_format()) +
+    theme_classic() +
+  labs(title = "Posterior for Amount of Hidden Orders per Stock",
+       subtitle = "Stocks with low volatility experience a wide range of hidden orders",
+       x = "Number of Hidden Orders",
+       y = "Probability",
+       fill = "Volatility")
 ```
 
 q: what types of stocks experience the most hidden orders?
-specific q: in the US stock market, will highly volatile stocks experience larger amounts of hidden orders than moderately or less volatile stocks?
+specific q: in the US stock market, on a typical trading day, will highly volatile stocks experience larger amounts of hidden orders than moderately or less volatile stocks?
 
 preceptor table:
 type of question: predictive -- # of hidden orders is one outcome
@@ -88,7 +89,5 @@ representativeness:
 unconfoundedness:
 - this is predictive
 
-model: 
-- 1: just volatility and hidden orders
-- 2: volatility, hidden orders, and stocks
-- 3: volatility, hidden orders, and stocks (within 3 * IQR)
+- model: 5, picked specific date, filtered out etfs
+- for model 6: filter outliers, add slope 

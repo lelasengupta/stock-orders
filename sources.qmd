@@ -5,3 +5,13 @@ title: "Sources"
 Data from the United States Securities and Exchange Commission (SEC) insert link here
 
 cleaned the data by renaming items in rows, filtering out outliers, separating stocks and etfs
+
+reasons for choosing the date: 
+https://apnews.com/article/wall-street-stocks-dow-nasdaq-034f6a3eb29ae92812cad9064a449b10 -- feb 7th was a relatively uneventful trading day
+
+months and days of the week slightly affect security trading:
+- wednesdays are uneventful, historically the s&p hasn't changed much on wednesdays
+- january is subject to seasonal tendancies of stocks to rise, february doesn't experience this as strongly 
+- stocks are affected by special events - avoided major holidays
+
+https://www.investopedia.com/day-trading/best-time-day-week-month-trade-stocks/

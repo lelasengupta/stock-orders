@@ -1,0 +1,55 @@
+---
+title: "Model"
+execute:
+  echo: false
+---
+
+```{r}
+#| label: setup
+#| message: false
+library(tidyverse)
+library(brms)
+library(tidybayes)
+library(gtsummary)
+```
+
+```{r}
+#| label: data_load
+#| message: false
+
+security <- read_csv("q1_2024_all.csv") |> 
+  janitor::clean_names() |>
+   mutate(volatility_rank = 
+            case_when(volatility_rank %in% c(1,4) ~ "low",
+    volatility_rank %in% c(5,7) ~ "mid" ,
+    volatility_rank %in% c(8,10) ~ "high"))|>
+  select(security, ticker, volatility_rank, hidden, date) |>
+  filter(hidden > 0, date == 20240207, security == "Stock") |>
+  drop_na() 
+```
+
+```{r}
+#| label: model
+#| cache: true
+
+fit_sec5 <- brm(formula = hidden ~ volatility_rank,
+    data = security,
+    family = gaussian(),
+    silent = 2,
+    refresh = 0,
+    seed = 9)
+```
+
+```{r}
+#| warning: false
+tbl_regression(fit_sec5)
+
+fixef(fit_sec5)
+```
+
+```{r}
+#|label: check
+#| message: false
+
+pp_check(fit_sec5, type = "hist")
+```
