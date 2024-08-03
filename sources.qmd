@@ -15,3 +15,5 @@ months and days of the week slightly affect security trading:
 - stocks are affected by special events - avoided major holidays
 
 https://www.investopedia.com/day-trading/best-time-day-week-month-trade-stocks/
+
+https://library.virginia.edu/data/articles/interpreting-log-transformations-in-a-linear-model

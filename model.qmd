@@ -3,7 +3,6 @@ title: "Model"
 execute:
   echo: false
 ---
-
 ```{r}
 #| label: setup
 #| message: false
@@ -16,40 +15,68 @@ library(gtsummary)
 ```{r}
 #| label: data_load
 #| message: false
+#| warning: false
 
-security <- read_csv("q1_2024_all.csv") |> 
+x <- read_csv("q1_2024_all.csv") |> 
   janitor::clean_names() |>
+#grouped numbers into character categories based on range of volatility ranks
    mutate(volatility_rank = 
             case_when(volatility_rank %in% c(1,4) ~ "low",
     volatility_rank %in% c(5,7) ~ "mid" ,
-    volatility_rank %in% c(8,10) ~ "high"))|>
-  select(security, ticker, volatility_rank, hidden, date) |>
-  filter(hidden > 0, date == 20240207, security == "Stock") |>
-  drop_na() 
+    volatility_rank %in% c(8,10) ~ "high"),
+  #log transformed data to make it fit a normal distribution
+    log_hidden = log(hidden)) |>
+  select(security, ticker, volatility_rank, hidden, date, log_hidden) |>
+#selected specific date, removed negative values, removed ETFs
+  filter(hidden > 0, date == 20240207, security == "Stock") |> drop_na()
+#removed NaNs
+stock <- na.omit(x)
+
 ```
+## Model Definition
+
+$$\begin{aligned}y_{i} = \beta_ix_i + \epsilon_{i}\\with\ y = log(hidden), x_i = volatility\_rank, \epsilon_{i} = error\end{aligned}$$
+To interpret log_hidden, I exponentiated the results of the fitted model using (exp(x) -1). 
 
 ```{r}
 #| label: model
 #| cache: true
 
-fit_sec5 <- brm(formula = hidden ~ volatility_rank,
-    data = security,
+fit_sec7 <- brm(formula = log_hidden ~ volatility_rank,
+    data = stock,
     family = gaussian(),
     silent = 2,
     refresh = 0,
     seed = 9)
 ```
-
+## Fitted Model
 ```{r}
 #| warning: false
-tbl_regression(fit_sec5)
+tbl_regression(fit_sec7)
 
-fixef(fit_sec5)
+fixef(fit_sec7)
 ```
+## Plot
+```{r}
+#| label: plot
 
+fit_sec7 |> 
+  add_epred_draws(newdata = tibble(volatility_rank = c("low", "mid", "high"))) |> 
+  ggplot(aes(x = .epred, fill = volatility_rank)) + 
+    geom_histogram(aes(y = after_stat(count/sum(count))),
+                   bins = 100, alpha = 0.7) + 
+    scale_y_continuous(labels = scales::percent_format()) +
+    theme_classic() +
+  labs(title = "Posterior for Hidden Orders per Stock",
+       subtitle = "Low and medium volatility stocks experience a higher percentage of hidden orders", 
+       x = "Hidden Orders (Log)",
+       y = "Probability",
+       fill = "Volatility")
+```
+## Posterior Predictive Check
 ```{r}
 #|label: check
 #| message: false
 
-pp_check(fit_sec5, type = "hist")
+pp_check(fit_sec7)
 ```

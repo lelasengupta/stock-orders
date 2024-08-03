@@ -5,7 +5,7 @@ format: html
 execute: 
   echo: false
 ---
-
+edit all this with the stuff in the models section
 ```{r}
 #| label: setup
 #| message: false
@@ -19,17 +19,20 @@ library(gtsummary)
 #| label: data_load
 #| message: false
 
-security <- read_csv("q1_2024_all.csv") |> 
+x <- read_csv("q1_2024_all.csv") |> 
   janitor::clean_names() |>
+#grouped numbers into character categories based on range of volatility ranks
    mutate(volatility_rank = 
             case_when(volatility_rank %in% c(1,4) ~ "low",
     volatility_rank %in% c(5,7) ~ "mid" ,
-    volatility_rank %in% c(8,10) ~ "high"))|>
-  select(security, ticker, volatility_rank, hidden, date) |>
-  filter(hidden > 0, date == 20240207, security == "Stock") |>
-  drop_na() 
-
-
+    volatility_rank %in% c(8,10) ~ "high"),
+  #log transformed data to make it fit a normal distribution
+    log_hidden = log(hidden))|>
+  select(security, ticker, volatility_rank, hidden, date, log_hidden) |>
+#selected specific date, removed negative values, removed ETFs
+  filter(hidden > 0, date == 20240207, security == "Stock") |> drop_na()
+#removed NaNs
+stock <- na.omit(x)
 ```
 
 
@@ -37,7 +40,7 @@ security <- read_csv("q1_2024_all.csv") |>
 #| label: model
 #| cache: true
 
-fit_sec5 <- brm(formula = hidden ~ volatility_rank,
+fit_sec7 <- brm(formula = log_hidden ~ volatility_rank,
     data = security,
     family = gaussian(),
     silent = 2,
@@ -48,19 +51,28 @@ fit_sec5 <- brm(formula = hidden ~ volatility_rank,
 
 ```{r}
 #| label: plot
-fit_sec5 |> 
+
+#I could make a super nice looking stat slab or density plot or perhaps even a facet wrap
+
+
+fit_sec7 |> 
   add_epred_draws(newdata = tibble(volatility_rank = c("low", "mid", "high"))) |> 
-  ggplot(aes(x = .epred, fill = volatility_rank)) + 
-    geom_histogram(aes(y = after_stat(count/sum(count))),
+  ggplot(aes(x = .epred, fill = volatility_rank)) +
+  geom_histogram(aes(y = after_stat(count/sum(count))),
                    bins = 100, alpha = 0.7) + 
     scale_y_continuous(labels = scales::percent_format()) +
     theme_classic() +
-  labs(title = "Posterior for Amount of Hidden Orders per Stock",
-       subtitle = "Stocks with low volatility experience a wide range of hidden orders",
+  labs(title = "Posterior for Hidden Orders per Stock",
        x = "Number of Hidden Orders",
        y = "Probability",
        fill = "Volatility")
 ```
+
+Using data from the United States Securities and Exchange Commission (SEC), I seek to understand the relationship between a US stock's volatility level and the amount of hidden orders it experiences on a typical trading day. Data was taken from trades made in US markets on February 7th, 2024. There is some concern that the SEC's methods of measuring volatility rankings may slightly differ from individual investors. I created a Bayesian linear regression model after taking the logarithmic transformation of the hidden orders column. Low volatility stocks experience about a 172% increase in hidden orders compared to high volatility stocks, although that number could be as high as 232% and as low as 120%. <-- add transitions, edit conclusion based on common sense
+
+## Stock Info
+- add in terms that people need to understand to make the data make sense
+- volatility, hidden orders
 
 q: what types of stocks experience the most hidden orders?
 specific q: in the US stock market, on a typical trading day, will highly volatile stocks experience larger amounts of hidden orders than moderately or less volatile stocks?
@@ -89,5 +101,4 @@ representativeness:
 unconfoundedness:
 - this is predictive
 
-- model: 5, picked specific date, filtered out etfs
-- for model 6: filter outliers, add slope 
+- model 7: log transformed ver
