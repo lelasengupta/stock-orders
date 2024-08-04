@@ -31,14 +31,16 @@ x <- read_csv("q1_2024_all.csv") |>
     log_hidden = log(hidden)) |>
   select(security, ticker, volatility_rank, hidden, date, log_hidden, mcap_rank) |>
 #selected specific date, removed negative values, removed ETFs
-  filter(hidden > 0, date == 20240207, security == "Stock") |> drop_na()
+  filter(hidden > 0, security == "Stock") |> drop_na()
 #removed NaNs
 stock <- na.omit(x)
+#randomly selected stocks
+stock <- stock %>% sample_n(10000)
 
 ```
 ## Model Definition
 
-$$\begin{aligned}y_{i} = \beta_1x_1 + \beta_2x_2+ \epsilon_{i}\\with\ y = log(hidden), x_1 = volatility\_rank, x_2 = mcap\_rank, \epsilon_{i} = error\end{aligned}$$
+$$\begin{aligned}y_{i} = \beta_1x_1 + \beta_2x_2+ \epsilon_{i}\\with\ y = log(hidden), x_1 = volatility\_rank, x_2 = mcap\_rank,\epsilon_{i}\sim (N, \sigma^2)\end{aligned}$$
 To interpret log_hidden, I exponentiated the results of the fitted model using (exp(x) -1). 
 
 ```{r}
@@ -52,14 +54,14 @@ fit_sec8 <- brm(formula = log_hidden ~ volatility_rank + mcap_rank,
     refresh = 0,
     seed = 9)
 ```
-## Fitted Model
+## Model Parameters
 ```{r}
 #| warning: false
 tbl_regression(fit_sec8)
 
 fixef(fit_sec8)
 ```
-## Plot
+## Posterior
 ```{r}
 #| label: plot
 
@@ -75,24 +77,11 @@ fit_sec8 |>
        x = "Hidden Orders (Log)",
        y = "Probability",
        fill = "Volatility")
-
-fit_sec8 |> 
-  add_epred_draws(newdata = tibble(volatility_rank = c("low", "mid", "high"), mcap_rank = c("low", "mid", "high"))) |> 
-  ggplot(aes(x = .epred, fill = mcap_rank)) + 
-    geom_histogram(aes(y = after_stat(count/sum(count))),
-                   bins = 200, alpha = 0.7) + 
-    scale_y_continuous(labels = scales::percent_format()) +
-    theme_classic() +
-  labs(title = "Posterior for Hidden Orders per Stock",
-       subtitle = "Stocks with large market caps experience  the most hidden orders", 
-       x = "Hidden Orders (Log)",
-       y = "Probability",
-       fill = "Market Capitalization")
 ```
 ## Posterior Predictive Check
 ```{r}
 #|label: check
 #| message: false
 
-pp_check(fit_sec7, type = "hist")
+pp_check(fit_sec8, type = "hist")
 ```

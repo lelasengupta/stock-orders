@@ -5,7 +5,7 @@ format: html
 execute: 
   echo: false
 ---
-edit all this with the stuff in the models section
+
 ```{r}
 #| label: setup
 #| message: false
@@ -18,21 +18,31 @@ library(gtsummary)
 ```{r}
 #| label: data_load
 #| message: false
+#| warning: false
+
 
 x <- read_csv("q1_2024_all.csv") |> 
   janitor::clean_names() |>
-#grouped numbers into character categories based on range of volatility ranks
+#grouped numbers into character categories based on range of volatility ranks and mcap ranks
    mutate(volatility_rank = 
             case_when(volatility_rank %in% c(1,4) ~ "low",
-    volatility_rank %in% c(5,7) ~ "mid" ,
-    volatility_rank %in% c(8,10) ~ "high"),
+                      volatility_rank %in% c(5,7) ~ "mid" ,
+                      volatility_rank %in% c(8,10) ~ "high"),
+    mcap_rank = case_when(mcap_rank %in% c(1, 4) ~ "low",
+                         mcap_rank %in% c(5, 7) ~ "mid",
+                         mcap_rank %in% c(8, 10) ~ "high"),
   #log transformed data to make it fit a normal distribution
-    log_hidden = log(hidden))|>
-  select(security, ticker, volatility_rank, hidden, date, log_hidden) |>
+    log_hidden = log(hidden)) |>
+  select(security, ticker, volatility_rank, hidden, date, log_hidden, mcap_rank) |>
 #selected specific date, removed negative values, removed ETFs
-  filter(hidden > 0, date == 20240207, security == "Stock") |> drop_na()
+  filter(hidden > 0, security == "Stock") |> drop_na()
 #removed NaNs
 stock <- na.omit(x)
+#randomly selected stocks
+stock <- stock %>% sample_n(10000)
+
+
+
 ```
 
 
@@ -40,54 +50,38 @@ stock <- na.omit(x)
 #| label: model
 #| cache: true
 
-fit_sec7 <- brm(formula = log_hidden ~ volatility_rank,
-    data = security,
+fit_sec8 <- brm(formula = log_hidden ~ volatility_rank + mcap_rank,
+    data = stock,
     family = gaussian(),
     silent = 2,
     refresh = 0,
     seed = 9)
 ```
 
-
 ```{r}
 #| label: plot
-
-fit_sec8 |>
-  add_epred_draws(newdata = tibble(volatility_rank = c("low", "mid", "high"), mcap_rank = c("low", "mid", "high"))) |>
-  ggplot(aes(x = volatility_rank, y = .epred, fill = volatility_rank)) + 
-  geom_boxplot(alpha = 0.5) + 
-  facet_grid(~ mcap_rank) +
-  theme(
-    strip.background = element_blank(),
-    strip.text = element_text(size = 12)
-  ) +
-  labs(
-    x = "Volatility Rank",
-    y = ".epred"
-  ) +
-  scale_y_continuous(limits = c(3, 9))  # Setting limits for the y-axis
-```
-
-
-```{r}
 fit_sec8 |>
   add_epred_draws(newdata = tibble(volatility_rank = c("low", "mid", "high"), mcap_rank = c("low", "mid", "high"))) |>
   ggplot(aes(x = mcap_rank, y = .epred, fill = volatility_rank)) + 
   geom_violin(alpha = 0.5) + 
   scale_y_continuous(limits = c(3, 9)) +
   theme_classic() +
-  labs(title = "Log of Hidden Orders per Stock Type",
+  labs(title = "Hidden Orders (log) per Stock Type",
        subtitle = "Stocks with high volatility and high market capitalizations experience the most hidden orders",
        x = "Market Capitalization",
        y = "Hidden Orders (log)",
        fill = "Volatility Rank")
 ```
-
-Using data from the United States Securities and Exchange Commission (SEC), I seek to understand the relationship between hidden orders and the volatility levels of stocks on US markets on a singular trading day within the next 10 years. Data was taken from trades made in US markets on February 7th, 2024. There is some concern that the SEC's methods of measuring volatility rankings may slightly differ from individual investors. I modeled fit_sec8, a Bayesian linear regression model as a function of the logarithmic transformation of hidden orders. Low volatility stocks experience about a 54% decrease in hidden orders compared to high volatility stocks, although that number could be as high as 63% and as low as 43%. These results could vary further depending on a stock's market capitalization. 
+## Analysis
+Using early 2024 data from the United States Securities and Exchange Commission (SEC), I seek to understand the relationship between a stock's volatility level and hidden orders in US markets within the next ten years. There is some concern that the SEC's methods of measuring volatility may slightly differ from individual investors. I created a Bayesian linear regression model with the logarithmic transformation of hidden orders as the dependent variable, and volatility rank and market capitalization as independent variables. Low volatility stocks experience about a 54% decrease in hidden orders compared to high volatility stocks, although that number could be as high as 63% and as low as 43%. These results could also vary with stock's market capitalization. 
 
 
 ## Stock Info
-- add in terms that people need to understand to make the data make sense
-- volatility, hidden orders
+**Volatility**: define here, includes methods of quantifying it
+
+**Hidden Orders**: define here
+
+**Market Capitalization**: define here
+
 
 - model 8: log transformed ver with mcap_rank

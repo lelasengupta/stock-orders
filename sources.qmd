@@ -1,19 +1,11 @@
 ---
 title: "Sources"
 ---
+## Sources
+I collected my data from the SEC's [2024 Q1 Metrics by Individual Security](https://www.sec.gov/about/marketstructuredata-security) dataset, which provides day-to-day metrics for over 4,800 US securities from January 1st 2024 to March 28th 2024. 
 
-Data from the United States Securities and Exchange Commission (SEC) insert link here
+[Interpreting logarithmic transformations](https://library.virginia.edu/data/articles/interpreting-log-transformations-in-a-linear-model)
 
-cleaned the data by renaming items in rows, filtering out outliers, separating stocks and etfs
+## Data Cleaning
 
-reasons for choosing the date: 
-https://apnews.com/article/wall-street-stocks-dow-nasdaq-034f6a3eb29ae92812cad9064a449b10 -- feb 7th was a relatively uneventful trading day
-
-months and days of the week slightly affect security trading:
-- wednesdays are uneventful, historically the s&p hasn't changed much on wednesdays
-- january is subject to seasonal tendancies of stocks to rise, february doesn't experience this as strongly 
-- stocks are affected by special events - avoided major holidays
-
-https://www.investopedia.com/day-trading/best-time-day-week-month-trade-stocks/
-
-https://library.virginia.edu/data/articles/interpreting-log-transformations-in-a-linear-model
+In the market capitalization rank and volatility rank columns, the SEC assigns each security a ranking between 1 - 10, with 1 being the lowest outcome and 10 being the highest. For readability purposes, I sorted each rank into three categories: low, middle, and high. I further cleaned this dataset by renaming columns to in an R-friendly format, filtering out other securities, and using the sample function to randomly select 10,000 out of 85,516 stocks to use in my analysis.

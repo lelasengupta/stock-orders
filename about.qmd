@@ -2,4 +2,10 @@
 title: "About"
 ---
 
-About this site
+## About Me
+
+My name is Lela Sengupta. I'm a rising freshman at Tufts University interested in finance, data science, and international relations. You can take a look at my Github [here](https://github.com/lelasengupta) and reach me at [lelasen06\@gmail.com](lelasen06@gmail.com).
+
+## About This Project
+
+This project was created as part of [Kane's Free Data Science Bootcamp](https://bootcamp.davidkane.info). The code I used can be found in this [repository](https://github.com/lelasengupta/stock-orders.git).
